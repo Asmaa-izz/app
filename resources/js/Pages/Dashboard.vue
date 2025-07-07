@@ -3,10 +3,13 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { useBreadcrumbStore } from '@/Stores/breadcrumb'
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const breadcrumbStore = useBreadcrumbStore()
 
 breadcrumbStore.setItems([
-    { label: 'Home' }
+    { label: t('home') }
 ])
 </script>
 

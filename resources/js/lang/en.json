@@ -1,0 +1,18 @@
+{
+    "home": "Home",
+
+    "welcome": "Welcome",
+    "logout": "Logout",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm_delete": "Are you sure you want to delete this item?",
+    "language": "Language",
+    "notifications": "Notifications",
+    "search": "Search",
+    "no_data": "No data available"
+}

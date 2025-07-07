@@ -17,13 +17,29 @@ import {
     SidebarMenuSubItem,
 } from '@/Components/ui/sidebar'
 
-import {usePage} from "@inertiajs/vue3";
-import {computed} from "vue";
+import { usePage } from "@inertiajs/vue3";
+import { computed } from "vue";
+
+// props القادِمة من الأب
+const props = defineProps({
+    items: Array,
+})
+
+// معلومات الصفحة الحالية
 const page = usePage()
+const currentUrl = computed(() => page.url)  // مثل: "/projects" أو "/settings"
+
+// RTL or LTR
 const isLTR = computed(() => page.props.locale === 'en');
 
-defineProps({
-    items: Array,
+// نحسب nav items مع isActive تلقائيًا
+const navItemsWithActive = computed(() => {
+    return props.items.map(item => {
+        const hasActive = item.items.some(subItem =>
+            currentUrl.value.startsWith(subItem.url)
+        )
+        return { ...item, isActive: hasActive }
+    })
 })
 </script>
 
@@ -32,7 +48,7 @@ defineProps({
         <SidebarGroupLabel>List</SidebarGroupLabel>
         <SidebarMenu>
             <Collapsible
-                v-for="item in items"
+                v-for="item in navItemsWithActive"
                 :key="item.title"
                 as-child
                 :default-open="item.isActive"
@@ -43,8 +59,14 @@ defineProps({
                         <SidebarMenuButton :tooltip="item.title">
                             <component :is="item.icon" v-if="item.icon" />
                             <span>{{ item.title }}</span>
-                            <ChevronRight v-if="isLTR" class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                            <ChevronLeft v-else class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            <ChevronRight
+                                v-if="isLTR"
+                                class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                            />
+                            <ChevronLeft
+                                v-else
+                                class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                            />
                         </SidebarMenuButton>
                     </CollapsibleTrigger>
                     <CollapsibleContent>

@@ -13,9 +13,10 @@ class UserSeed extends Seeder
      */
     public function run(): void
     {
-        $user = User::firstOrCreate(['email' => 'asmaa@app.com'], [
+        $user = User::firstOrCreate(['email' => 'my@app.com'], [
                 'name' => 'Asmaa',
-                'email' => 'asmaa@app.com',
+                'email' => 'my@app.com',
+                'locale' => 'ar',
                 'password' => Hash::make('123')
             ]
         );

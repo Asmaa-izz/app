@@ -33,7 +33,9 @@ class AppServiceProvider extends ServiceProvider
                     ] : null,
                 ];
             },
-            'locale' => app()->getLocale()
+            'locale' => function () {
+                return auth()->user()->locale;
+            }
         ]);
     }
 }

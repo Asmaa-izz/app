@@ -12,6 +12,9 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
 
+
+    Route::post('/change-language', [\App\Http\Controllers\LanguageController::class, 'changeLanguage'])->name('change-language');
+
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
