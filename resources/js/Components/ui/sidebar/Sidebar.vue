@@ -1,18 +1,20 @@
 <script setup>
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/Components/ui/sheet';
 import { SIDEBAR_WIDTH_MOBILE, useSidebar } from "./utils";
 
-defineOptions({
-  inheritAttrs: false,
-});
+import { usePage } from '@inertiajs/vue3'
+import {computed} from "vue";
+const page = usePage()
+const side = computed(() => {
+    return props.side ?? (page.props.locale === 'en' ? 'left' : 'right')
+})
 
 const props = defineProps({
-  side: { type: String, required: false, default: "left" },
-  variant: { type: String, required: false, default: "sidebar" },
-  collapsible: { type: String, required: false, default: "offcanvas" },
-  class: { type: null, required: false },
-});
+    variant: { type: String, required: false, default: "sidebar" },
+    collapsible: { type: String, required: false, default: "offcanvas" },
+    class: { type: null, required: false },
+})
 
 const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 </script>

@@ -6,8 +6,7 @@ import { useBreadcrumbStore } from '@/Stores/breadcrumb'
 const breadcrumbStore = useBreadcrumbStore()
 
 breadcrumbStore.setItems([
-    // { label: 'Home', url: '/' },
-    { label: 'Dashboard' }
+    { label: 'Home' }
 ])
 </script>
 

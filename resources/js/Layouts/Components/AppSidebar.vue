@@ -38,10 +38,7 @@ const data = {
             url: '#',
             icon: Settings,
             items: [
-                { title: 'General', url: '#' },
-                { title: 'Team', url: '#' },
-                { title: 'Billing', url: '#' },
-                { title: 'Limits', url: '#' },
+                { title: 'General', url: '/settings' },
             ],
         },
     ],

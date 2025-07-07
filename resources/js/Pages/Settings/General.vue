@@ -7,8 +7,7 @@ const breadcrumbStore = useBreadcrumbStore()
 
 breadcrumbStore.setItems([
     { label: 'Home', url: '/dashboard' },
-    { label: 'Projects', url: '/projects' },
-    { label: 'Create' }
+    { label: 'Settings' }
 ])
 </script>
 

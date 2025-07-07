@@ -1,5 +1,5 @@
 <script setup>
-import { ChevronRight } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft } from 'lucide-vue-next'
 import {
     Collapsible,
     CollapsibleContent,
@@ -17,6 +17,11 @@ import {
     SidebarMenuSubItem,
 } from '@/Components/ui/sidebar'
 
+import {usePage} from "@inertiajs/vue3";
+import {computed} from "vue";
+const page = usePage()
+const isLTR = computed(() => page.props.locale === 'en');
+
 defineProps({
     items: Array,
 })
@@ -24,7 +29,7 @@ defineProps({
 
 <template>
     <SidebarGroup>
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel>List</SidebarGroupLabel>
         <SidebarMenu>
             <Collapsible
                 v-for="item in items"
@@ -38,7 +43,8 @@ defineProps({
                         <SidebarMenuButton :tooltip="item.title">
                             <component :is="item.icon" v-if="item.icon" />
                             <span>{{ item.title }}</span>
-                            <ChevronRight class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            <ChevronRight v-if="isLTR" class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            <ChevronLeft v-else class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
