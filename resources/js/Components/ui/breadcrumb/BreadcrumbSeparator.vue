@@ -1,6 +1,11 @@
 <script setup>
-import { ChevronRight } from "lucide-vue-next";
+import { ChevronRight, ChevronLeft } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
+
+import { usePage } from '@inertiajs/vue3'
+import {computed} from "vue";
+const page = usePage()
+const locale = computed(() => page.props.locale)
 
 const props = defineProps({
   class: { type: null, required: false },
@@ -14,7 +19,8 @@ const props = defineProps({
     :class="cn('[&>svg]:w-3.5 [&>svg]:h-3.5', props.class)"
   >
     <slot>
-      <ChevronRight />
+      <ChevronRight v-if="locale === 'en'"/>
+      <ChevronLeft v-else/>
     </slot>
   </li>
 </template>
