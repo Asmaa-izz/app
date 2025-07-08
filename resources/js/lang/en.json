@@ -1,11 +1,16 @@
 {
     "home": "Home",
+    "users-manage": "Users",
+    "all": "All",
+    "create-new": "Create New",
+    "settings": "Settings",
+    "settings-general": "General",
 
     "welcome": "Welcome",
     "logout": "Logout",
     "login": "Login",
     "dashboard": "Dashboard",
-    "settings": "Settings",
+
     "profile": "Profile",
     "save": "Save",
     "cancel": "Cancel",
