@@ -15,6 +15,8 @@ import {
     SidebarHeader,
     SidebarRail,
 } from '@/Components/ui/sidebar'
+import {useI18n} from "vue-i18n";
+const { t } = useI18n()
 
 const props = withDefaults(defineProps(), {
     collapsible: 'icon',
@@ -24,21 +26,21 @@ const props = withDefaults(defineProps(), {
 const data = {
     navMain: [
         {
-            title: 'Project',
+            title: t('users-manage'),
             url: '#',
             icon: Presentation,
             isActive: true,
             items: [
-                { title: 'All', url: '/projects' },
-                { title: 'Create', url: 'projects/create' },
+                { title: t('all'), url: '/users' },
+                { title: t('create-new'), url: 'users/create' },
             ],
         },
         {
-            title: 'Settings',
+            title: t('settings'),
             url: '#',
             icon: Settings,
             items: [
-                { title: 'General', url: '/settings' },
+                { title: t('settings-general'), url: '/settings' },
             ],
         },
     ],

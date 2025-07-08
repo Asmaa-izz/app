@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,12 +20,8 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/projects',  function () {
-        return Inertia::render('Project/Index');
-    });
-    Route::get('/projects/create',  function () {
-        return Inertia::render('Project/Create');
-    });
+    Route::resource('users', UserController::class);
+
     Route::get('/settings',  function () {
         return Inertia::render('Settings/General');
     });
