@@ -1,10 +1,17 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import {Button} from '@/Components/ui/button'
+import {Card, CardContent, CardHeader,} from '@/Components/ui/card'
+import {Input} from '@/Components/ui/input'
+import {Label} from '@/Components/ui/label'
+
+import AuthLayout from '@/Layouts/AuthLayout.vue'
+
+import {useI18n} from 'vue-i18n'
+
+const {t} = useI18n()
+
+import {Head, useForm} from "@inertiajs/vue3";
+import {CardDescription} from "@/Components/ui/card/index.js";
 
 defineProps({
     status: {
@@ -19,50 +26,54 @@ const form = useForm({
 const submit = () => {
     form.post(route('password.email'));
 };
+
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Forgot Password" />
+    <Head title="Forgot Password" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
+    <AuthLayout>
+
+        <div class="flex flex-col gap-6">
+            <Card>
+                <CardHeader class="text-center">
+                    <CardDescription>
+                        Forgot your password? No problem. Just let us know your email
+                        address and we will email you a password reset link that will allow
+                        you to choose a new one.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+
+                    <div
+                        v-if="status"
+                        class="mb-4 text-sm font-medium text-green-600"
+                    >
+                        {{ status }}
+                    </div>
+
+                    <form @submit.prevent="submit">
+                        <div class="grid gap-6">
+                            <div class="grid gap-6">
+                                <div class="grid gap-2">
+                                    <Label html-for="email">{{ t('email') }}</Label>
+                                    <Input id="email" required type="email" v-model="form.email"/>
+                                    <div v-show="form.errors.email">
+                                        <p class="text-sm text-red-600">
+                                            {{ form.errors.email }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button class="w-full" type="submit"
+                                        :class="{ 'opacity-25': form.processing }"
+                                        :disabled="form.processing">
+                                    {{ t('Email Password Reset Link') }}
+                                </Button>
+                            </div>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
-
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600"
-        >
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Email Password Reset Link
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
+    </AuthLayout>
 </template>
