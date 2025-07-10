@@ -1,4 +1,18 @@
 {
+    "dashboard": "لوحة التحكم",
+    "login": "تسجيل الدخول",
+    "welcome_title": "مرحبًا بك في مشروعنا",
+    "welcome_description": "نظام متكامل يساعدك على إدارة أعمالك بسهولة وكفاءة",
+    "start_now": "ابدأ الآن",
+    "feature_easy": "سهولة الاستخدام",
+    "feature_easy_desc": "تصميم عصري وتجربة مستخدم مميزة تجعل العمل أسرع وأسهل.",
+    "feature_powerful": "أداء قوي",
+    "feature_powerful_desc": "بنية مرنة تدعم المشاريع الصغيرة والكبيرة بكفاءة عالية.",
+    "feature_integration": "تكامل مرن",
+    "feature_integration_desc": "إمكانية التوسع وربط النظام بخدمات وتطبيقات خارجية بسهولة.",
+    "cta_title": "ابدأ باستخدام النظام اليوم",
+    "cta_description": "طور عملك مع حلول ذكية وسريعة التنفيذ",
+
     "home": "الرئيسية",
     "users-manage": "إدارة المستخدمين",
     "all": "الجميع",
@@ -6,10 +20,27 @@
     "settings": "الإعدادات",
     "settings-general": "الإعدادات العامة",
 
-    "welcome": "مرحبًا بك",
+    "Welcome back": "مرحبا من جديد",
+    "sign-up": "إنشاء حساب",
     "logout": "تسجيل الخروج",
-    "login": "تسجيل الدخول",
-    "dashboard": "لوحة التحكم",
+    "forgot-your-password?": "هل نسيت كلمة المرور",
+    "email": "البريد الالكتروني",
+    "password": "كلمة المرور",
+    "don't-have-an-account?": "هل لا تملك حساب",
+    "Remember me": "تذكرني",
+    "Already registered?": "هل قمت بالتسجيل بالفعل؟",
+    "password_confirmation": "تأكيد كلمة المرور",
+    "Confirm": "Confirm",
+    "This is a secure area of the application. Please confirm your password before continuing." : "هذه منطقة آمنة للتطبيق. يُرجى تأكيد كلمة مرورك قبل المتابعة.",
+    "Email Password Reset Link": "رابط إعادة تعيين كلمة المرور للبريد الإلكتروني",
+    "Resend Verification Email": "Resend Verification Email",
+    "Log Out": "Log Out",
+    "Reset Password": "Reset Password",
+
+
+    "welcome": "مرحبًا بك",
+
+
 
     "profile": "الملف الشخصي",
     "save": "حفظ",

@@ -1,11 +1,16 @@
 <script setup>
-import Checkbox from '@/Components/Checkbox.vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import {Button} from '@/Components/ui/button'
+import {Card, CardContent, CardHeader, CardTitle,} from '@/Components/ui/card'
+import {Input} from '@/Components/ui/input'
+import {Label} from '@/Components/ui/label'
+
+import AuthLayout from '@/Layouts/AuthLayout.vue'
+import { Checkbox } from "@/Components/ui/checkbox";
+
+import {useI18n} from 'vue-i18n'
+const {t} = useI18n()
+import {Head, Link, useForm} from "@inertiajs/vue3";
+
 
 defineProps({
     canResetPassword: {
@@ -27,74 +32,90 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Log in" />
+    <Head title="Log in"/>
+
+    <AuthLayout>
 
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+        <div class="flex flex-col gap-6">
+            <Card>
+                <CardHeader class="text-center">
+                    <CardTitle class="text-xl">
+                        {{ t('Welcome back') }}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form @submit.prevent="submit">
+                        <div class="grid gap-6">
+                            <div class="grid gap-6">
+                                <div class="grid gap-2">
+                                    <Label html-for="email">{{ t('email') }}</Label>
+                                    <Input
+                                        id="email"
+                                        v-model="form.email"
+                                        placeholder="m@example.com"
+                                        required
+                                        type="email"
+                                    />
+                                    <div v-show="form.errors.email">
+                                        <p class="text-sm text-red-600">
+                                            {{ form.errors.email }}
+                                        </p>
+                                    </div>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
-                </label>
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Forgot your password?
-                </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Log in
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
+                                </div>
+                                <div class="grid gap-2">
+                                    <div class="flex items-center">
+                                        <Label html-for="password">{{ t('password') }}</Label>
+                                        <Link
+                                            v-if="canResetPassword"
+                                            :href="route('password.request')"
+                                            class="ml-auto text-sm underline-offset-4 hover:underline"
+                                        >
+                                            {{ t('Forgot your password?') }}
+                                        </Link>
+                                    </div>
+                                    <Input id="password" required type="password"   v-model="form.password"/>
+                                    <div v-show="form.errors.password">
+                                        <p class="text-sm text-red-600">
+                                            {{ form.errors.password }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="grid gap-2">
+                                    <div class="flex items-center space-x-2">
+                                        <Checkbox id="remember" name="remember" v-model:checked="form.remember"  />
+                                        <label
+                                            for="remember"
+                                            class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                            {{ t('Remember me') }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <Button class="w-full" type="submit"
+                                        :class="{ 'opacity-25': form.processing }"
+                                        :disabled="form.processing">
+                                    {{ t('login') }}
+                                </Button>
+                            </div>
+                            <div class="text-center text-sm">
+                                {{ t("don't-have-an-account?") }}
+                                <Link class="underline underline-offset-4" :href="route('register')">
+                                    {{ t('sign-up') }}
+                                </Link>
+                            </div>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    </AuthLayout>
 </template>
