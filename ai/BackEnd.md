@@ -194,8 +194,20 @@ private function handleImageUpload($image): string
     return $path;
 }
 ```
+### **Step 5: Permissions Seeder**
+📂 `database/seeders/RoleAndPermissionSeeder.php`
 
-### **Step 5: Policy** (Permission-Based)
+**Auto-create permissions:**
+```php
+    Permission::firstOrCreate(['name' => 'access_{{ table_name }}']);
+    Permission::firstOrCreate(['name' => 'create_{{ table_name }}']);
+    Permission::firstOrCreate(['name' => 'update_{{ table_name }}']);
+    Permission::firstOrCreate(['name' => 'delete_{{ table_name }}']);
+```
+**run**
+php artisan db:seed --class=RoleAndPermissionSeeder
+
+### **Step 6: Policy** (Permission-Based)
 📂 `app/Policies/{{ ModelName }}Policy.php`
 
 **Must include permission-based authorization:**
@@ -226,18 +238,6 @@ public function delete(User $user, {{ ModelName }} ${{ variableName }}): bool
 }
 ```
 
-### **Step 6: Permissions Seeder**
-📂 `database/seeders/{{ ModelName }}PermissionSeeder.php`
-
-**Auto-create permissions:**
-```php
-$permissions = [
-    'view_{{ table_name }}',
-    'create_{{ table_name }}',
-    'update_{{ table_name }}',
-    'delete_{{ table_name }}'
-];
-```
 
 ### **Step 7: Form Requests**
 📂 `app/Http/Requests/{{ ModelName }}/`
@@ -256,11 +256,11 @@ public function rules(): array
 
 public function messages(): array
 {
-    return [
-        'name.required' => 'The name field is required',
-        'email.email' => 'Invalid email format',
-        'image.max' => 'Image size must not exceed 2MB',
-        'image.mimes' => 'Image must be of type: jpeg, png, jpg, gif',
+return [
+        'name.required' => __('validation.custom.name.required'),
+        'email.email' => __('validation.custom.email.email'),
+        'image.max' => __('validation.custom.image.max'),
+        'image.mimes' => __('validation.custom.image.mimes'),
         // Error messages for all fields
     ];
 }
@@ -279,17 +279,23 @@ public function __construct({{ ModelName }}Service $service)
 
 public function index(Request $request)
 {
-    try {
-        ${{ variableName }}s = $this->service->index($request->all());
-        
+       try {
+        $items = $this->service->index($request->all());
+
+        $items->transform(function ($item) {
+            return array_merge($item->toArray(), [
+                'can_view'   => Gate::allows('view', $item),
+                'can_update' => Gate::allows('update', $item),
+                'can_delete' => Gate::allows('delete', $item),
+            ]);
+        });
+
         return Inertia::render('{{ ModelName }}/Index', [
-            '{{ variableName }}s' => ${{ variableName }}s,
+            '{{ variableName }}s' => $items,
             'can_create' => Gate::allows('create', {{ ModelName }}::class),
-            'can_update' => Gate::allows('update', {{ ModelName }}::class),
-            'can_delete' => Gate::allows('delete', {{ ModelName }}::class),
             'filters' => $request->only(['search', 'date_from', 'date_to']),
         ]);
-        
+
     } catch (\Exception $e) {
         return redirect()->back()->with('error', $e->getMessage());
     }
@@ -342,17 +348,7 @@ class {{ ModelName }}Notification extends Notification
 }
 ```
 
-### **Step 11: Frontend Components**
-📂 `resources/js/Pages/{{ ModelName }}/`
-
-**Create files using existing i18n setup:**
-- `Index.vue` - Data table with shadcn-vue components and advanced filtering
-- `Create.vue` - Creation form with image upload (if enabled)
-- `Edit.vue` - Edit form with image preview and replacement
-- `Show.vue` - Detail view with image display (optional)
-
 **Requirements:**
-- Use existing Arabic/English language files: `resources/js/lang/ar/{{ table_name }}.json` and `resources/js/lang/en/{{ table_name }}.json`
 - Implement proper form validation with clear error messages
 - Add loading states and error handling
 - Use shadcn-vue components consistently
@@ -360,46 +356,6 @@ class {{ ModelName }}Notification extends Notification
 - Include image preview and drag-drop upload (if media upload is enabled)
 - Add advanced filtering with date pickers and multi-select
 
-**Example Index.vue structure:**
-```vue
-<script setup>
-    import { useI18n } from 'vue-i18n'
-    import { ref, reactive } from 'vue'
-
-    const { t } = useI18n()
-
-    const props = defineProps({
-    {{ variableName }}s: Object,
-        can_create: Boolean,
-        can_update: Boolean,
-        can_delete: Boolean,
-        filters: Object,
-    })
-
-    const filters = reactive({
-        search: props.filters.search || '',
-        date_from: props.filters.date_from || '',
-        date_to: props.filters.date_to || '',
-    })
-
-    // Image handling (if enabled)
-    const handleImageUpload = (file) => {
-        // Validate image size and type
-        if (file.size > 2048 * 1024) {
-            alert('Image size must not exceed 2MB')
-            return false
-        }
-
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif']
-        if (!allowedTypes.includes(file.type)) {
-            alert('Invalid image format. Please use JPEG, PNG, JPG, or GIF')
-            return false
-        }
-
-        return true
-    }
-</script>
-```
 
 ---
 
