@@ -26,13 +26,13 @@ Resource Route: {{ resourceRoute }}
 ### **Fields Configuration:**
 ```yaml
 fields:
-  - name: "{{ field_name }}"
-    type: "{{ field_type }}" # string, integer, boolean, date, json, etc.
-    validation: "{{ validation_rules }}" # required, nullable, unique, etc.
-    frontend_type: "{{ input_type }}" # text, textarea, select, checkbox, etc.
-    options: "{{ field_options }}" # for select fields, relationships, etc.
-    relationship: "{{ relationship_type }}" # belongsTo, hasMany, etc. (if applicable)
-    related_model: "{{ RelatedModel }}" # if relationship exists
+    - name: "{{ field_name }}"
+      type: "{{ field_type }}" # string, integer, boolean, date, json, etc.
+      validation: "{{ validation_rules }}" # required, nullable, unique, etc.
+      frontend_type: "{{ input_type }}" # text, textarea, select, checkbox, etc.
+      options: "{{ field_options }}" # for select fields, relationships, etc.
+      relationship: "{{ relationship_type }}" # belongsTo, hasMany, etc. (if applicable)
+      related_model: "{{ RelatedModel }}" # if relationship exists
 ```
 
 ---
@@ -73,6 +73,12 @@ fields:
 - Add foreign key constraints for any detected relationships
 - Create indexes for frequently queried columns
 - Include image/file columns if media upload is enabled
+
+**Add indexes manually for:**
+-Foreign keys
+-Searchable fields (e.g., email, slug, name)
+-Columns used in filtering or joins
+-Composite indexes for performance optimization
 
 ### **Step 2: Model**
 📂 `app/Models/{{ ModelName }}.php`
@@ -357,41 +363,41 @@ class {{ ModelName }}Notification extends Notification
 **Example Index.vue structure:**
 ```vue
 <script setup>
-import { useI18n } from 'vue-i18n'
-import { ref, reactive } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { ref, reactive } from 'vue'
 
-const { t } = useI18n()
+    const { t } = useI18n()
 
-const props = defineProps({
+    const props = defineProps({
     {{ variableName }}s: Object,
-    can_create: Boolean,
-    can_update: Boolean,
-    can_delete: Boolean,
-    filters: Object,
-})
+        can_create: Boolean,
+        can_update: Boolean,
+        can_delete: Boolean,
+        filters: Object,
+    })
 
-const filters = reactive({
-    search: props.filters.search || '',
-    date_from: props.filters.date_from || '',
-    date_to: props.filters.date_to || '',
-})
+    const filters = reactive({
+        search: props.filters.search || '',
+        date_from: props.filters.date_from || '',
+        date_to: props.filters.date_to || '',
+    })
 
-// Image handling (if enabled)
-const handleImageUpload = (file) => {
-    // Validate image size and type
-    if (file.size > 2048 * 1024) {
-        alert('Image size must not exceed 2MB')
-        return false
+    // Image handling (if enabled)
+    const handleImageUpload = (file) => {
+        // Validate image size and type
+        if (file.size > 2048 * 1024) {
+            alert('Image size must not exceed 2MB')
+            return false
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif']
+        if (!allowedTypes.includes(file.type)) {
+            alert('Invalid image format. Please use JPEG, PNG, JPG, or GIF')
+            return false
+        }
+
+        return true
     }
-    
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif']
-    if (!allowedTypes.includes(file.type)) {
-        alert('Invalid image format. Please use JPEG, PNG, JPG, or GIF')
-        return false
-    }
-    
-    return true
-}
 </script>
 ```
 

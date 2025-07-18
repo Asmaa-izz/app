@@ -13,6 +13,7 @@ A modern full-stack starter kit using:
 - **TailwindCSS**
 - **Pinia**
 - **RTL Support**
+- **shadcn vue**
 - **Sanctum Auth**
 - **Pest for testing**
 
