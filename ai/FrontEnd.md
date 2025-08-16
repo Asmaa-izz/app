@@ -1,97 +1,169 @@
-# 🎨 Vue 3 + Inertia.js Frontend CRUD Module Generator - Optimized Prompt
+# �� Vue 3 + Inertia.js Generic Entity UI Generator – AI-Oriented Spec
 
-## 🌐 Tech Stack
+## 🌐 Tech Stack & Standards
 
-- **Framework:** Vue 3 (Composition API)
-- **Router:** Inertia.js (Laravel Inertia adapter)
-- **Styling:** Tailwind CSS + **shadcn-vue** components (https://www.shadcn-vue.com/)
-- **Language Support:** vue-i18n (already configured - Arabic & English)
-- **State Management:** Pinia (optional)
-- **Forms & Validation:** Vee-validate / native + Laravel backend validation
-- **File Upload:** Drag-drop with preview (optional)
-- **Access Control:** Permissions passed from backend (Gate-based)
+- Framework: Vue 3 (Composition API)
+- Router: Inertia.js (Laravel Inertia adapter)
+- Styling: TailwindCSS + shadcn-vue components (`https://www.shadcn-vue.com/`)
+- i18n: vue-i18n (Arabic/English already configured)
+- State: Pinia (optional, modular)
+- Validation: Backend Form Requests + client-side hints
+- Access Control: Permissions passed from backend (`Gate`-based flags)
+- Placeholders (standardized):
+    - `{{ Model }}` (e.g., Project)
+    - `{{ modelVariable }}` (e.g., project)
+    - `{{ tableName }}` (e.g., projects)
+    - `{{ resourceRoute }}` (e.g., projects)
 
 ---
 
-## 📁 Module Details
+## 🎯 Goal
+- Prefer reusing a small set of generic “Entity” pages and components instead of generating dedicated pages per model.
+- Let the AI infer whether a new dedicated page is needed based on the project brief and frontend rules; otherwise, extend the registry/config and reuse generic pages.
 
+---
+
+## 🧾 Module Input (YAML)
 ```yaml
-Module: {{ ModelName }}
-Route: /{{ route_prefix }}
-Directory: resources/js/Pages/{{ ModelName }}
+model: {{ Model }}
+resourceRoute: {{ resourceRoute }}
+features:
+  create: true
+  update: true
+  delete: true
+  show: false                # if true, enable dedicated view panel/route
+  image_upload: false
+  advanced_filtering: false
+  custom_ui_needed: false    # if true, AI may create dedicated pages
+
+ui:
+  list:
+    columns:
+      - key: "name"
+        label: "entities.{{ tableName }}.name"
+        sortable: true
+        searchable: true
+      # add more columns as needed
+    actions:
+      create: true
+      edit: true
+      delete: true
+  form:
+    fields:
+      - key: "name"
+        type: "string"          # string, text, boolean, number, date, select, file, image
+        required: true
+        component: "Input"      # maps to shadcn-vue/Input
+        props: {}
+      # additional fields from backend field config
+  filters:
+    search: true
+    date_from: false
+    date_to: false
+    extra: []                  # extra filter configs
+
+strategy:
+  page_generation: "auto"      # auto | never | always
+  prefer_generic: true          # when true, reuse Entity pages if possible
 ```
 
 ---
 
-## 🧩 Pages to Generate
-
-1. `Index.vue`
-    - Paginated data table
-    - Search input
-    - Date range filters (if enabled)
-    - Permission-based action buttons (create/edit/delete)
-    - i18n labels and dynamic columns
-
-2. `Create.vue`
-    - Form to create a new record
-    - i18n field labels and validation messages
-    - File/image upload with preview (if enabled)
-
-3. `Edit.vue`
-    - Form to edit an existing record
-    - Load current data on mount
-    - File/image preview and replace
-    - Permission checks for editing
-
-4. `Show.vue` (Optional)
-    - Read-only detail view of a record
-    - Image display (if enabled)
+## 🧠 AI Decision Framework
+- If `strategy.page_generation` is `never`: do NOT create model-specific pages. Update the registry and reuse generic Entity pages.
+- If `strategy.page_generation` is `always`: create dedicated pages for this model (only when `custom_ui_needed` is true or explicitly requested).
+- If `auto` (default):
+    - Reuse generic pages if the module fits standard CRUD with configurable list/form.
+    - Create dedicated pages ONLY IF:
+        - Non-trivial custom UI/flows (wizards, nested editors, complex dashboards)
+        - Domain-specific interactions that require custom components/layouts
+        - Performance/UI constraints unsuitable for generic components
 
 ---
 
-## 📦 Input Type Mapping (Based on backend field config)
+## 🧱 Generic Entity Pages (Preferred)
 
-| Backend Field Type | Vue Input Component     |
-|--------------------|------------------------|
-| string             | `<Input />`             |
-| text               | `<Textarea />`          |
-| boolean            | `<Switch />`            |
-| integer, float     | `<Input type="number" />` |
-| date               | `<Input type="date" />`  |
+### Directory
+```
+resources/js/Pages/Entity/
+├── Index.vue           # List + inline Create/Edit modals/drawers
+├── components/
+│   ├── EntityTable.vue
+│   ├── EntityForm.vue
+│   └── EntityShow.vue  # optional
+├── registry.js         # entity registry (config per entity)
+```
+
+### Registry – `resources/js/Pages/Entity/registry.js`
+- Central place to map an entity key to UI config.
+- The AI updates this registry to onboard a new model without adding new pages.
+
+Example entry:
+```js
+export const entityRegistry = {
+  '{{ tableName }}': {
+    routeName: '{{ resourceRoute }}',
+    i18nKey: 'entities.{{ tableName }}',
+    permissions: {
+      create: 'create_{{ tableName }}',
+      update: 'update_{{ tableName }}',
+      delete: 'delete_{{ tableName }}',
+      view:   'view_{{ tableName }}'
+    },
+    list: {
+      columns: [
+        { key: 'name', label: 'entities.{{ tableName }}.name', sortable: true, searchable: true },
+      ]
+    },
+    form: {
+      fields: [
+        { key: 'name', type: 'string', required: true, component: 'Input', props: {} },
+      ]
+    },
+    filters: { search: true, date_from: false, date_to: false, extra: [] }
+  }
+}
+```
+
+### Data Flow
+- Backend controller returns Inertia props:
+    - `items` (paginated)
+    - `can_create`, `can_update`, `can_delete`
+    - Optional `uiSchema` to override/extend registry at runtime
+- Frontend `Entity/Index.vue` merges `uiSchema` over `registry.js` entry.
+
+---
+
+## 📦 Input Type Mapping (shadcn-vue)
+
+| Backend Field Type | Vue Input Component                    |
+|--------------------|----------------------------------------|
+| string             | `<Input />`                            |
+| text               | `<Textarea />`                         |
+| boolean            | `<Switch />`                           |
+| integer, float     | `<Input type="number" />`             |
+| date               | `<Input type="date" />`               |
 | file, image        | `<CustomImageUploader />` (with preview) |
-| enum, select       | `<Select :options="..." />` |
+| enum, select       | `<Select :options="..." />`           |
 
 ---
 
 ## 🧪 Validation Handling
-
-- Use Laravel Form Requests backend validation
-- Display validation errors returned by backend
-- Example error handling in Vue:
-
+- Rely on Laravel Form Request validation; display backend errors.
+- Example client code:
 ```js
 if (error.response?.status === 422) {
   errors.value = error.response.data.errors
 }
 ```
-
-- Use i18n keys for error messages:
-
-```vue
-<span class="text-red-500">{{ t('validation.name_required') }}</span>
-```
+- i18n error messages via `resources/js/lang/{locale}.json`.
 
 ---
 
-## 📥 File Upload (If Enabled)
-
-- Drag & drop support with image preview
-- Maximum file size: 2MB
-- Allowed formats: jpeg, png, jpg, gif
-- Optional cropping (if required)
-
-Example usage:
-
+## 📥 File Upload (Optional)
+- Drag & drop with preview
+- Max size: 2MB; Formats: jpeg, png, jpg, gif
+- Suggested UI:
 ```vue
 <input type="file" @change="handleUpload" accept="image/*" />
 <img :src="previewUrl" v-if="previewUrl" class="w-32 h-32 object-cover mt-2" />
@@ -100,9 +172,7 @@ Example usage:
 ---
 
 ## 🔐 Permissions (Passed from Backend)
-
-Props from backend controller:
-
+- Props from backend:
 ```js
 {
   can_create: Boolean,
@@ -110,198 +180,107 @@ Props from backend controller:
   can_delete: Boolean
 }
 ```
-
-Use permissions in UI:
-
+- Usage:
 ```vue
 <Button v-if="can_create">{{ t('actions.create') }}</Button>
 ```
 
 ---
 
-## 🔍 Filters & Search (If Enabled)
-
-- Search input field
-- Date range filters: `date_from`, `date_to`
-- Multi-select filters (optional)
-
-Bind filters reactively:
-
+## 🔍 Filters & Search
+- Support `search`, `date_from`, `date_to`, and extensible `extra` filters.
+- Bind reactively and send via Inertia:
 ```vue
 <Input v-model="filters.search" />
 ```
-
-Send filter parameters via Inertia:
-
 ```js
-router.get(route('{{ route_prefix }}.index'), filters)
+router.get(route('{{ resourceRoute }}.index'), filters)
 ```
 
 ---
 
-## 🌍 i18n Translation Guidelines
-
-### Translation Files Structure
-
-- All translations must be centralized in **only two files**:
-
-    - `resources/js/lang/en.json` (English)
-    - `resources/js/lang/ar.json` (Arabic)
-
-- Avoid splitting translation keys across multiple files (e.g., avoid `users.json`, `products.json`) to prevent duplication and ease maintenance.
+## 🌍 i18n Policy
+- Only two files:
+    - `resources/js/lang/en.json`
+    - `resources/js/lang/ar.json`
+- Use module namespaces under `entities.{{ tableName }}`.
+- Access via dot-notation: `t('entities.{{ tableName }}.title')`.
 
 ---
 
-### Adding Translations
+## 🔁 Generic Entity Page Template (Index.vue)
+- Responsibilities:
+    - Render table from `registry` + optional `uiSchema`
+    - Manage filters and pagination
+    - Open Create/Edit as modal/drawer using `EntityForm`
+    - Respect permission flags from backend
 
-- Add translations inside the language files under unique namespaces (keys) per module or section.
-
-- Example for users module (`en.json`):
-
-```json
-{
-  "users": {
-    "title": "Users",
-    "name": "Name",
-    "email": "Email",
-    "actions": {
-      "create": "Create",
-      "edit": "Edit",
-      "delete": "Delete"
-    }
-  },
-  "common": {
-    "save": "Save",
-    "cancel": "Cancel"
-  }
-}
-```
-
-Corresponding `ar.json`:
-
-```json
-{
-  "users": {
-    "title": "المستخدمون",
-    "name": "الاسم",
-    "email": "البريد الإلكتروني",
-    "actions": {
-      "create": "إنشاء",
-      "edit": "تعديل",
-      "delete": "حذف"
-    }
-  },
-  "common": {
-    "save": "حفظ",
-    "cancel": "إلغاء"
-  }
-}
-```
-
----
-
-### Important Notes
-
-- **Do not duplicate translation keys** inside the same file.
-- Avoid creating multiple translation files per module.
-- Add new modules/sections by adding keys inside these two main files.
-- Access translations using dot notation: `t('users.title')` or `t('common.save')`.
-
----
-
-### Example Usage in Vue
-
-```vue
-<template>
-  <h1>{{ t('users.title') }}</h1>
-  <label>{{ t('users.name') }}</label>
-  <button>{{ t('common.save') }}</button>
-</template>
-
-<script setup>
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
-</script>
-```
-
----
-
-## 🔁 Form Logic Template (Example)
-
-```vue
-<script setup>
-import { ref } from 'vue'
-import { useForm } from '@inertiajs/vue3'
-import { useI18n } from 'vue-i18n'
-
-const { t } = useI18n()
-
-const form = useForm({
-  name: '',
-  email: '',
-  // other fields...
+Submission example:
+```js
+form.post(route('{{ resourceRoute }}.store'), {
+  onSuccess: () => toast.success(t('messages.created_successfully')),
+  onError: () => toast.error(t('messages.error_occurred')),
 })
-
-const submit = () => {
-  form.post(route('{{ route_prefix }}.store'), {
-    onSuccess: () => {
-      toast.success(t('messages.created_successfully'))
-    },
-    onError: () => {
-      toast.error(t('messages.error_occurred'))
-    },
-  })
-}
-</script>
 ```
 
 ---
 
-## ⚙️ Performance and UX
-
-- Use skeleton loaders or spinners while loading data
-- Debounce search input to reduce requests
-- Smooth transitions for modals and forms
-- Preserve filters and scroll position using Inertia
-- Lazy load images where applicable
+## ⚙️ Performance & UX
+- Skeleton loaders/spinners while loading
+- Debounced search
+- Preserve filters/scroll with Inertia
+- Lazy-load where applicable
 
 ---
 
-## 📋 Example File Structure
+## 🧭 When to Create Dedicated Pages
+Create model-specific pages ONLY if one or more apply:
+- Complex multi-step flows/wizards
+- Highly customized layout or interactions not covered by generic components
+- Domain visualizations (charts, timelines) tightly coupled to the entity
+- Performance tuning requiring specialized pagination/virtualization
 
+If none apply, update `registry.js` and reuse `Entity` pages.
+
+---
+
+## 🧩 Brief the AI (What to Provide)
+- Project idea and UX guidelines (short description)
+- For each entity:
+    - `model`, `resourceRoute`, and permissions
+    - Desired list columns and form fields (or let AI infer from backend field config)
+    - Any custom UI notes (if `custom_ui_needed: true`)
+- Preferred `strategy.page_generation`: `auto` (default), `never`, or `always`
+
+AI will then:
+1) Decide reuse vs create based on `strategy` and complexity.
+2) If reuse: add/extend entry in `registry.js`, adjust `Entity` components as needed.
+3) If create: scaffold minimal dedicated pages respecting the same conventions and i18n.
+
+---
+
+## 📦 Example File Structure (Generic-first)
 ```
-resources/js/Pages/{{ ModelName }}/
+resources/js/Pages/Entity/
 ├── Index.vue
-├── Create.vue
-├── Edit.vue
-├── Show.vue
+├── components/
+│   ├── EntityTable.vue
+│   ├── EntityForm.vue
+│   └── EntityShow.vue
+├── registry.js
 ```
-
----
-
-## 📌 Best Practices
-
-1. Always use i18n strings for all labels, buttons, and validation messages.
-2. Use permissions from backend to conditionally show/hide UI elements.
-3. Wrap root nodes properly; avoid multiple root elements in templates.
-4. Use `defineProps` and `defineEmits` correctly in script setup.
-5. Encapsulate reusable UI parts, like image uploaders, into components.
-6. Validate images on frontend before submitting to backend.
-7. Handle Inertia progress with NProgress or similar UI feedback.
 
 ---
 
 ## 🏁 Final Output Requirements
-
-- Vue 3 with Composition API
-- Compatible with Inertia.js routing and page lifecycle
+- Generic-first implementation (registry + Entity pages)
 - Uses shadcn-vue components consistently
 - Fully responsive and accessible
-- Full Arabic and English support via vue-i18n centralized files
-- Permission-aware UI elements
-- Clean, maintainable, and production-ready code
+- Arabic/English via centralized i18n
+- Permission-aware UI
+- Clean, maintainable, production-ready
 
 ---
 
-> **Note:** Replace all `{{ placeholder }}` values with your actual project-specific information before generating.
+> Note: Replace all `{{ placeholder }}` values with project-specific values. Prefer updating `registry.js` over generating new pages unless `custom_ui_needed` or `strategy.page_generation` requires otherwise.
 

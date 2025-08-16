@@ -1,0 +1,36 @@
+model: Project
+resourceRoute: projects
+features:
+  create: true
+  update: true
+  delete: true
+  show: true
+  image_upload: false
+  advanced_filtering: false
+  custom_ui_needed: false
+ui:
+  list:
+    columns:
+      - key: "name"
+        label: "entities.projects.name"
+        sortable: true
+        searchable: true
+    actions:
+      create: true
+      edit: true
+      delete: true
+  form:
+    fields:
+      - key: "name"
+        type: "string"
+        required: true
+        component: "Input"
+        props: {}
+  filters:
+    search: true
+    date_from: false
+    date_to: false
+    extra: []
+strategy:
+  page_generation: "auto"  # auto | never | always
+  prefer_generic: true

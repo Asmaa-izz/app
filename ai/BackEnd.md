@@ -1,464 +1,419 @@
-# 🚀 **Laravel 12 CRUD Backend Module Generator - Optimized Prompt**
+# 🚀 Laravel 12 CRUD Backend Module Generator – AI-Oriented Spec
 
-## 📋 **Context & Requirements**
-You are an expert Laravel developer creating a complete, production-ready CRUD module following modern Laravel best practices.
-
-### **Tech Stack:**
-- **Backend:** Laravel 12 (PHP 8.2+)
-- **Frontend:** Vue 3 + Inertia.js + shadcn-vue components
-- **Styling:** TailwindCSS
-- **Internationalization:** vue-i18n (Arabic & English already configured)
-- **Packages:** spatie/laravel-activitylog, spatie/laravel-permission (already installed)
-- **Architecture:** Service Layer pattern + Repository (if needed)
-- **Caching:** Laravel Cache with Redis
+## 📋 Goal
+A precise, production-ready specification for generating a full CRUD backend module in Laravel 12 (PHP 8.2+), optimized for AI agents to read and implement consistently.
 
 ---
 
-## 🎯 **Module Configuration**
+## 🧩 Tech Stack & Conventions
+- Backend: Laravel 12, PHP 8.2+
+- Frontend: Vue 3 + Inertia.js + shadcn-vue (already configured)
+- Styling: TailwindCSS
+- i18n: vue-i18n (ar/en configured)
+- Packages: spatie/laravel-activitylog, spatie/laravel-permission
+- Architecture: Service Layer (Repository optional)
+- Cache: Redis (prefer Cache::tags)
+- Standards:
+    - declare(strict_types=1);
+    - PSR-12 coding style
+    - SOLID principles
 
-### **Core Information:**
-```yaml
-Model: {{ ModelName }}
-Table: {{ table_name }}
-Resource Route: {{ resourceRoute }}
-```
+---
 
-### **Fields Configuration:**
+## 🔖 Placeholders (Standardized)
+- {{ Model }}: PascalCase model name (e.g., Project)
+- {{ modelVariable }}: camelCase variable (e.g., project)
+- {{ tableName }}: snake_case plural table (e.g., projects)
+- {{ resourceRoute }}: resource route name/prefix (e.g., projects)
+- {{ fields }}: array of field configs
+
+---
+
+## 🧾 Module Input (YAML)
 ```yaml
+model: {{ Model }}
+table: {{ tableName }}
+resourceRoute: {{ resourceRoute }}
 fields:
-    - name: "{{ field_name }}"
-      type: "{{ field_type }}" # string, integer, boolean, date, json, etc.
-      validation: "{{ validation_rules }}" # required, nullable, unique, etc.
-      frontend_type: "{{ input_type }}" # text, textarea, select, checkbox, etc.
-      options: "{{ field_options }}" # for select fields, relationships, etc.
-      relationship: "{{ relationship_type }}" # belongsTo, hasMany, etc. (if applicable)
-      related_model: "{{ RelatedModel }}" # if relationship exists
+  - name: "name"
+    type: "string"            # string, integer, boolean, date, json, text, uuid, etc.
+    validation: "required|max:255"
+    frontend_type: "text"     # text, textarea, select, checkbox, date, number, file, etc.
+    options: null              # for selects (array or key=>label)
+    relationship: null         # belongsTo, hasMany, etc.
+    related_model: null        # e.g., User
+
+options:
+  api: false                   # generate API endpoints
+  api_versioned: false
+  use_dto: false
+  full_text_search: false
+  export: false                # PDF/Excel
+  image_upload: false
+  notifications: false
+  advanced_filtering: false
 ```
 
 ---
 
-## 🤖 **Pre-Generation Questions** (Limited Set)
+## 📁 Implementation Steps
 
-**IMPORTANT: Only ask these essential questions:**
+### 1) Migration – `database/migrations/create_{{ tableName }}_table.php`
+- Always include: `$table->softDeletes();`, `$table->timestamps();`
+- Add indexes for foreign keys, searchable columns, and filters
+- Add unique `slug` if requested
+- Add proper foreign key constraints
+- Prefer correct column types (date vs datetime, json for structured data)
 
-1. **API Requirements:**
-    - Generate REST API endpoints? (Default: No)
-    - API versioning needed? (Default: No)
-
-2. **Advanced Features:**
-    - Use DTOs for data transfer? (Default: No)
-    - Add full-text search? (Default: No)
-    - Export functionality (PDF, Excel)? (Default: No)
-
-3. **Media & Notifications:**
-    - Add image upload with size limits and validation? (Default: No)
-    - Include notification system (email, database)? (Default: No)
-    - Add advanced filtering (date ranges, multiple select)? (Default: No)
-
-4. **Custom Requirements:**
-    - Any custom business logic or validations?(Default: No)
-    - Integration with external APIs?(Default: No)
-
----
-
-## 📁 **Implementation Structure**
-
-### **Step 1: Migration**
-📂 `database/migrations/create_{{ table_name }}_table.php`
-
-**Requirements:**
-- Include `$table->softDeletes()` and `$table->timestamps()` automatically
-- Add slug field with unique index if "slug" field is mentioned
-- Use proper column types and indexes for all fields
-- Add foreign key constraints for any detected relationships
-- Create indexes for frequently queried columns
-- Include image/file columns if media upload is enabled
-
-**Add indexes manually for:**
--Foreign keys
--Searchable fields (e.g., email, slug, name)
--Columns used in filtering or joins
--Composite indexes for performance optimization
-
-### **Step 2: Model**
-📂 `app/Models/{{ ModelName }}.php`
-
-**Must include:**
+### 2) Model – `app/Models/{{ Model }}.php`
 ```php
+<?php declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class {{ ModelName }} extends Model
+class {{ Model }} extends Model
 {
     use SoftDeletes, LogsActivity;
-    
-    protected $fillable = [/* all fields */];
-    
+
+    protected $fillable = [/* all fillable fields */];
+
+    protected $casts = [
+        // e.g. 'meta' => 'array', 'published_at' => 'datetime'
+    ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logAll();
     }
-    
-    // Auto-generate relationships based on field configuration
-    // Add proper casting for date/json fields
-    // Include accessors/mutators if needed
-    // Add image handling methods if media upload is enabled
+
+    // Define relationships automatically based on field config
 }
 ```
 
-### **Step 3: Observer** (Auto-Generated)
-📂 `app/Observers/{{ ModelName }}Observer.php`
+### 3) Observer – `app/Observers/{{ Model }}Observer.php`
+- Responsibilities:
+    - Cache invalidation on created/updated/deleted/restored
+    - Enhanced activity logging (custom descriptions if needed)
+    - File cleanup for file fields (if any)
+    - Image processing if `image_upload` enabled
 
-**Generate with:**
+Register in `App\Providers\AppServiceProvider::boot()`:
+```php
+use App\Models\{{ Model }};
+use App\Observers\{{ Model }}Observer;
+
+public function boot(): void
+{
+    {{ Model }}::observe({{ Model }}Observer::class);
+}
+```
+
+### 4) Service Layer – `app/Services/{{ Model }}Service.php`
+- Error handling with try/catch
+- Prefer `Cache::tags('{{ tableName }}')` where supported
+- Use transactions for create/update/delete
+
+Key methods (signatures):
+```php
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class {{ Model }}Service
+{
+    public function index(array $filters = []): LengthAwarePaginator
+    {
+        try {
+            $cacheKey = '{{ tableName }}:list:' . md5(serialize($filters));
+
+            return Cache::tags(['{{ tableName }}'])->remember($cacheKey, 3600, function () use ($filters) {
+                return {{ Model }}::query()
+                    ->with([/* relationships */])
+                    ->when($filters['search'] ?? null, function ($query, $search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    })
+                    ->when($filters['date_from'] ?? null, function ($query, $date) {
+                        $query->whereDate('created_at', '>=', $date);
+                    })
+                    ->when($filters['date_to'] ?? null, function ($query, $date) {
+                        $query->whereDate('created_at', '<=', $date);
+                    })
+                    ->latest()
+                    ->paginate(15);
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error fetching {{ tableName }}: ' . $e->getMessage(), ['filters' => $filters]);
+            throw new \RuntimeException(__('messages.errors.fetch_failed'));
+        }
+    }
+
+    public function show(int|string $id): {{ Model }}
+    {
+        try {
+            $cacheKey = '{{ tableName }}:show:' . $id;
+            return Cache::tags(['{{ tableName }}'])->remember($cacheKey, 3600, fn () => {{ Model }}::with([/* relationships */])->findOrFail($id));
+        } catch (\Throwable $e) {
+            Log::error('Error fetching {{ tableName }} item: ' . $e->getMessage(), ['id' => $id]);
+            throw new \RuntimeException(__('messages.errors.fetch_failed'));
+        }
+    }
+
+    public function store(array $data): {{ Model }}
+    {
+        try {
+            return DB::transaction(function () use ($data) {
+                if (isset($data['image']) && $data['image']) {
+                    $data['image'] = $this->handleImageUpload($data['image']);
+                }
+
+                $model = {{ Model }}::create($data);
+
+                Cache::tags(['{{ tableName }}'])->flush();
+                // Optionally dispatch notifications/events here
+
+                return $model;
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error creating {{ tableName }}: ' . $e->getMessage(), ['data' => $data]);
+            throw new \RuntimeException(__('messages.errors.create_failed'));
+        }
+    }
+
+    public function update({{ Model }} ${{ modelVariable }}, array $data): {{ Model }}
+    {
+        try {
+            return DB::transaction(function () use (${{ modelVariable }}, $data) {
+                if (isset($data['image']) && $data['image']) {
+                    $data['image'] = $this->handleImageUpload($data['image']);
+                }
+
+                ${{ modelVariable }}->update($data);
+
+                Cache::tags(['{{ tableName }}'])->flush();
+
+                return ${{ modelVariable }};
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error updating {{ tableName }}: ' . $e->getMessage(), ['id' => ${{ modelVariable }}->id, 'data' => $data]);
+            throw new \RuntimeException(__('messages.errors.update_failed'));
+        }
+    }
+
+    public function delete({{ Model }} ${{ modelVariable }}): void
+    {
+        try {
+            DB::transaction(function () use (${{ modelVariable }}) {
+                ${{ modelVariable }}->delete();
+                Cache::tags(['{{ tableName }}'])->flush();
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error deleting {{ tableName }}: ' . $e->getMessage(), ['id' => ${{ modelVariable }}->id]);
+            throw new \RuntimeException(__('messages.errors.delete_failed'));
+        }
+    }
+
+    private function handleImageUpload($image): string
+    {
+        $path = $image->store('{{ tableName }}/images', 'public');
+        // Optional: optimize image here
+        return $path;
+    }
+}
+```
+
+### 5) Permissions Seeder – `database/seeders/RoleAndPermissionSeeder.php`
+Create consistent CRUD permissions (unify naming with Policy):
+```php
+Permission::firstOrCreate(['name' => 'view_{{ tableName }}']);
+Permission::firstOrCreate(['name' => 'create_{{ tableName }}']);
+Permission::firstOrCreate(['name' => 'update_{{ tableName }}']);
+Permission::firstOrCreate(['name' => 'delete_{{ tableName }}']);
+```
+Assign to roles as needed (e.g., `admin`).
+
+Run:
 ```bash
-php artisan make:observer {{ ModelName }}Observer --model={{ ModelName }}
-```
-
-**Must include:**
-- Cache invalidation on all CRUD operations (created, updated, deleted)
-- Enhanced activity logging with custom descriptions
-- File cleanup on delete if file fields exist
-- Image optimization and resizing if media upload is enabled
-- Any custom business logic hooks
-
-### **Step 4: Service Layer**
-📂 `app/Services/{{ ModelName }}Service.php`
-
-**Must include comprehensive error handling with try-catch:**
-```php
-public function index(array $filters = []): Collection
-{
-    try {
-        $cacheKey = '{{ table_name }}_list_' . md5(serialize($filters));
-        
-        return Cache::remember($cacheKey, 3600, function () use ($filters) {
-            return {{ ModelName }}::with(['relationships'])
-                ->when($filters['search'] ?? null, function ($query, $search) {
-                    $query->where('name', 'like', "%{$search}%");
-                })
-                ->when($filters['date_from'] ?? null, function ($query, $date) {
-                    $query->whereDate('created_at', '>=', $date);
-                })
-                ->when($filters['date_to'] ?? null, function ($query, $date) {
-                    $query->whereDate('created_at', '<=', $date);
-                })
-                ->latest()
-                ->paginate(15);
-        });
-        
-    } catch (\Exception $e) {
-        Log::error('Error fetching {{ table_name }}: ' . $e->getMessage());
-        throw new \Exception('Failed to fetch data. Please try again.');
-    }
-}
-
-public function store(array $data): {{ ModelName }}
-{
-    try {
-        DB::beginTransaction();
-        
-        // Handle file upload if enabled
-        if (isset($data['image']) && $data['image']) {
-            $data['image'] = $this->handleImageUpload($data['image']);
-        }
-        
-        ${{ variableName }} = {{ ModelName }}::create($data);
-        
-        // Clear related cache
-        Cache::forget('{{ table_name }}_list');
-        
-        // Send notification if enabled
-        if (config('app.notifications_enabled')) {
-            $this->sendNotification(${{ variableName }}, 'created');
-        }
-        
-        DB::commit();
-        return ${{ variableName }};
-        
-    } catch (\Exception $e) {
-        DB::rollback();
-        Log::error('Error creating {{ table_name }}: ' . $e->getMessage());
-        throw new \Exception('Failed to create record. Please try again.');
-    }
-}
-
-// Image handling method (if media upload is enabled)
-private function handleImageUpload($image): string
-{
-    $path = $image->store('{{ table_name }}/images', 'public');
-    
-    // Optimize image if needed
-    $this->optimizeImage(storage_path('app/public/' . $path));
-    
-    return $path;
-}
-```
-### **Step 5: Permissions Seeder**
-📂 `database/seeders/RoleAndPermissionSeeder.php`
-
-**Auto-create permissions:**
-```php
-    Permission::firstOrCreate(['name' => 'access_{{ table_name }}']);
-    Permission::firstOrCreate(['name' => 'create_{{ table_name }}']);
-    Permission::firstOrCreate(['name' => 'update_{{ table_name }}']);
-    Permission::firstOrCreate(['name' => 'delete_{{ table_name }}']);
-```
-**run**
 php artisan db:seed --class=RoleAndPermissionSeeder
-
-### **Step 6: Policy** (Permission-Based)
-📂 `app/Policies/{{ ModelName }}Policy.php`
-
-**Must include permission-based authorization:**
-```php
-public function viewAny(User $user): bool
-{
-    return $user->can('view_{{ table_name }}');
-}
-
-public function view(User $user, {{ ModelName }} ${{ variableName }}): bool
-{
-    return $user->can('view_{{ table_name }}');
-}
-
-public function create(User $user): bool
-{
-    return $user->can('create_{{ table_name }}');
-}
-
-public function update(User $user, {{ ModelName }} ${{ variableName }}): bool
-{
-    return $user->can('update_{{ table_name }}');
-}
-
-public function delete(User $user, {{ ModelName }} ${{ variableName }}): bool
-{
-    return $user->can('delete_{{ table_name }}');
-}
 ```
 
-
-### **Step 7: Form Requests**
-📂 `app/Http/Requests/{{ ModelName }}/`
-
-**With comprehensive validation and clear error messages:**
+### 6) Policy – `app/Policies/{{ Model }}Policy.php`
+Permission-based authorization, aligned with seeder:
 ```php
-// Store{{ ModelName }}Request.php
+public function viewAny(User $user): bool { return $user->can('view_{{ tableName }}'); }
+public function view(User $user, {{ Model }} ${{ modelVariable }}): bool { return $user->can('view_{{ tableName }}'); }
+public function create(User $user): bool { return $user->can('create_{{ tableName }}'); }
+public function update(User $user, {{ Model }} ${{ modelVariable }}): bool { return $user->can('update_{{ tableName }}'); }
+public function delete(User $user, {{ Model }} ${{ modelVariable }}): bool { return $user->can('delete_{{ tableName }}'); }
+```
+- Prefer Laravel policy auto-discovery, or map explicitly in `AuthServiceProvider` if needed.
+
+### 7) Form Requests – `app/Http/Requests/{{ Model }}/`
+Validation with clear error messages and authorization.
+```php
+// Store{{ Model }}Request.php
+public function authorize(): bool { return $this->user()->can('create_{{ tableName }}'); }
+
 public function rules(): array
 {
     return [
-        // validation rules based on field configuration
-        // Image validation if media upload is enabled
+        // rules based on fields config
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ];
 }
 
 public function messages(): array
 {
-return [
+    return [
         'name.required' => __('validation.custom.name.required'),
         'email.email' => __('validation.custom.email.email'),
         'image.max' => __('validation.custom.image.max'),
         'image.mimes' => __('validation.custom.image.mimes'),
-        // Error messages for all fields
     ];
 }
 ```
 
-### **Step 8: Controller**
-📂 `app/Http/Controllers/{{ ModelName }}Controller.php`
-
-**Must be thin and include:**
+### 8) Controller – `app/Http/Controllers/{{ Model }}Controller.php`
+Thin controller delegating to service, with authorization and Inertia response.
 ```php
-public function __construct({{ ModelName }}Service $service)
+public function __construct(private readonly {{ Model }}Service $service)
 {
-    $this->service = $service;
-    $this->authorizeResource({{ ModelName }}::class, '{{ variableName }}');
+    $this->authorizeResource({{ Model }}::class, '{{ modelVariable }}');
 }
 
 public function index(Request $request)
 {
-       try {
+    try {
         $items = $this->service->index($request->all());
 
-        $items->transform(function ($item) {
+        $items->getCollection()->transform(function ($item) {
             return array_merge($item->toArray(), [
-                'can_view'   => Gate::allows('view', $item),
+                'can_view' => Gate::allows('view', $item),
                 'can_update' => Gate::allows('update', $item),
                 'can_delete' => Gate::allows('delete', $item),
             ]);
         });
 
-        return Inertia::render('{{ ModelName }}/Index', [
-            '{{ variableName }}s' => $items,
-            'can_create' => Gate::allows('create', {{ ModelName }}::class),
+        return Inertia::render('{{ Model }}/Index', [
+            '{{ modelVariable }}s' => $items,
+            'can_create' => Gate::allows('create', {{ Model }}::class),
             'filters' => $request->only(['search', 'date_from', 'date_to']),
         ]);
-
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         return redirect()->back()->with('error', $e->getMessage());
     }
 }
 
-public function store(Store{{ ModelName }}Request $request)
+public function store(Store{{ Model }}Request $request)
 {
     try {
-        ${{ variableName }} = $this->service->store($request->validated());
-        
-        return redirect()->route('{{ resourceRoute }}.index')
-            ->with('success', '{{ ModelName }} created successfully');
-            
-    } catch (\Exception $e) {
-        return redirect()->back()
-            ->with('error', $e->getMessage())
-            ->withInput();
+        ${{ modelVariable }} = $this->service->store($request->validated());
+        return redirect()->route('{{ resourceRoute }}.index')->with('success', __('messages.created'));
+    } catch (\Throwable $e) {
+        return redirect()->back()->with('error', $e->getMessage())->withInput();
     }
 }
 ```
 
-### **Step 9: Routes**
-📂 `routes/web.php`
-
+### 9) Routes – `routes/web.php`
 ```php
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('{{ resourceRoute }}', {{ ModelName }}Controller::class);
+    Route::resource('{{ resourceRoute }}', {{ Model }}Controller::class)->names('{{ resourceRoute }}');
 });
 ```
 
-### **Step 10: Notification System** (If Enabled)
-📂 `app/Notifications/{{ ModelName }}Notification.php`
-
+### 10) Notifications (optional) – `app/Notifications/{{ Model }}Notification.php`
 ```php
-class {{ ModelName }}Notification extends Notification
+class {{ Model }}Notification extends Notification
 {
-    public function via($notifiable): array
-    {
-        return ['database', 'mail'];
-    }
-    
+    public function via($notifiable): array { return ['database', 'mail']; }
+
     public function toDatabase($notifiable): array
     {
         return [
-            'title' => 'New {{ ModelName }} Created',
-            'message' => 'A new {{ modelName }} has been created',
-            'action_url' => route('{{ resourceRoute }}.show', $this->{{ variableName }}),
+            'title' => 'New {{ Model }} Created',
+            'message' => 'A new {{ Model }} has been created',
+            'action_url' => route('{{ resourceRoute }}.show', $this->{{ modelVariable }}),
         ];
     }
 }
 ```
 
-**Requirements:**
-- Implement proper form validation with clear error messages
-- Add loading states and error handling
-- Use shadcn-vue components consistently
-- Pass permission checks from controller to frontend
-- Include image preview and drag-drop upload (if media upload is enabled)
-- Add advanced filtering with date pickers and multi-select
+---
 
+## 🛡️ Security
+- All inputs validated via Form Requests
+- CSRF enabled, XSS mitigated via escaping
+- SQL injection protection through Eloquent
+- Authorization enforced via Policies
+- Rate limiting where appropriate
+- File uploads: strictly validate type/size; store in `storage/app/public`
 
 ---
 
-## 🛡️ **Security Implementation**
-
-**Auto-implement these security measures:**
-- All inputs validated and sanitized through Form Requests
-- CSRF protection enabled by default
-- XSS protection with proper escaping
-- SQL injection prevention through Eloquent ORM
-- Authorization checks via Policy and Gate
-- Rate limiting on sensitive endpoints
-- Sensitive data excluded from API responses
-- Image upload security with file type and size validation
-- File storage in secure directories with proper permissions
+## ⚡ Performance
+- Necessary DB indexes and eager loading
+- Pagination (default 15)
+- Redis caching with `Cache::tags('{{ tableName }}')` and proper invalidation
+- Transactions for write operations
+- Use `select()` for specific columns when beneficial
 
 ---
 
-## 🚀 **Performance Optimizations**
-
-**Auto-implement:**
-- Database indexes on frequently queried columns
-- Eager loading for relationships to prevent N+1 queries
-- Pagination for large datasets (15 items per page)
-- Redis caching with proper cache invalidation
-- Query optimization using select() for specific columns
-- Proper use of database transactions
-- Image optimization and compression for uploaded files
-- Lazy loading for images in frontend components
+## 🧰 Error Handling
+- Wrap DB operations in try/catch
+- Log with context using `Log::error()`
+- Throw user-friendly localized messages (e.g., `__('messages.errors.create_failed')`)
+- Graceful fallbacks in controllers (redirect back with error flash)
 
 ---
 
-## 📊 **Error Handling Standards**
-
-**All methods must include:**
-- Try-catch blocks for all database operations
-- Database transactions for data integrity
-- Clear error messages for user-facing errors
-- Proper logging with Log::error() for debugging
-- Graceful fallbacks for failed operations
-- Consistent error response format
-- File upload error handling with user-friendly messages
+## 🌐 i18n
+- Reuse existing ar/en localization
+- Validation errors via `resources/lang/{locale}/validation.php`
+- Generic messages in `messages.php` (add keys like `created`, `errors.create_failed`, etc.)
 
 ---
 
-## 🎯 **Expected Output Quality**
-
-The generated code must be:
-- **Production-ready:** Complete functional code, no placeholders
-- **Secure:** Following all Laravel security best practices
-- **Performant:** Optimized queries and caching implemented
-- **Maintainable:** Clean, well-documented code structure
-- **Bilingual:** Full Arabic/English support using existing i18n setup
-- **Error-resistant:** Comprehensive error handling throughout
-- **Feature-rich:** Including requested features like image upload, notifications, and filtering
+## 🔎 Advanced Filtering (optional)
+- Filters: `search`, `date_from`, `date_to` (extendable)
+- For complex filters: add request DTO or dedicated Filter class
 
 ---
 
-## 📝 **Code Generation Rules**
-
-1. **Always include soft deletes and timestamps** in migrations
-2. **Auto-generate observers** for activity logging and cache management
-3. **Implement caching** in all service methods
-4. **Use existing i18n structure** - don't create new language files
-5. **Add comprehensive error handling** with try-catch blocks
-6. **Generate permission-based policies** with proper authorization
-7. **Include relationships** automatically based on field configuration
-8. **Pass permission checks** to frontend components
-9. **Use clear error messages** for better user experience
-10. **Follow Laravel naming conventions** and PSR-12 standards
-11. **Include image handling** with proper validation and optimization (if enabled)
-12. **Implement notification system** with database and email channels (if enabled)
-13. **Add advanced filtering** with date ranges and multi-select options (if enabled)
-14. **Ensure mobile responsiveness** for all frontend components
-15. **Add loading states** and proper user feedback throughout the application
+## ✅ Testing & QA
+- Add feature tests for CRUD actions with policies
+- Seed roles/permissions before tests
+- Example commands:
+```bash
+php artisan test
+php artisan db:seed --class=RoleAndPermissionSeeder
+```
 
 ---
 
-## 🔧 **Additional Features Configuration**
-
-### **Image Upload Features (If Enabled):**
-- Maximum file size: 2MB
-- Allowed formats: JPEG, PNG, JPG, GIF
-- Automatic image optimization and resizing
-- Multiple image upload support
-- Image preview and crop functionality
-- Secure file storage with proper naming
-
-### **Notification Features (If Enabled):**
-- Database notifications for admin actions
-- Email notifications for important events
-- Real-time notifications using broadcasting
-- Notification preferences per user
-- Notification history and read status
-
-### **Advanced Filtering Features (If Enabled):**
-- Date range filtering with date pickers
-- Multi-select dropdown filters
-- Search across multiple fields
-- Export filtered results
-- Save and load filter presets
-- Advanced search with operators (contains, equals, etc.)
+## ✅ Generation Rules (Recap)
+1) Always include soft deletes and timestamps in migrations
+2) Auto-generate and register observers
+3) Implement caching with tagged keys and invalidation on writes
+4) Comprehensive try/catch and logging in service methods
+5) Permission-based policies aligned with seeded permissions
+6) Pass permission flags to frontend via controller
+7) Use relationships, casts, and eager loading appropriately
+8) Use Form Requests for validation and authorization
+9) Transactions for store/update/delete
+10) Follow naming conventions and PSR-12; `declare(strict_types=1);`
 
 ---
 
-> **Note:** Replace all `{{ placeholder }}` values with actual project-specific information before generation. Default answers are "No" for all optional features unless specifically requested.
+## 🔍 Notes for AI
+- Keep placeholder usage consistent: `{{ Model }}`, `{{ modelVariable }}`, `{{ tableName }}`, `{{ resourceRoute }}`
+- Ensure policy permission strings match the seeder
+- Use `Cache::tags` where the backend cache driver supports it (Redis/Memcached)
+- If `image_upload` disabled, omit image handling paths entirely
+- Prefer auto-discovery for policies; fall back to manual mapping only if needed
